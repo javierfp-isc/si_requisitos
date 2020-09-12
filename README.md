@@ -1,111 +1,107 @@
-# Requisitos para las prácticas de SI
+# Entornos para Prácticas
 
 ## Pasos previos a realizar
 
-Para poder crear los escenarios de las prácticas y realizar las mismas es necesario ejecutar una serie de pasos previos los cuales se detallan a continuación
+La primera vez que realicéis una práctica será necesario configurar el entorno del sistema en el que se ejecutará. Una vez hecho se usará para todas las demás. Para desplegar el sistema para las prácticas seguid las instrucciones en:
 
-### Creación de Access token para gitlab
+[REQUISITOS](REQUISITOS.md)
 
-Es necesario que en vuestro usuario de gitlab.iessanclemente.net creéis un token personal para acceder al api.
+## Escenario
 
-Para acceder:
+El escenario es el conjunto de elementos necesarios para la realización de la práctica. Consistirá en un conjunto de contenedores docker, uno o más, con funciones bien establecidas y descritas en la práctica. Tendrás que realizar los pasos indicados en la práctica en ellos, es decir serán la base de trabajo.
 
-[https://gitlab.iessanclemente.net](https://gitlab.iessanclemente.net)
+Cada repositorio constará de una serie de escenarios de trabajo, estos escenarios disponen de un archivo de despliegue **docker-compose.yml** que genera toda la estructura del escenario.
 
-**Usuario y password la del usuario del dominio**
+### Creación del escenario de la práctica
 
-Un vez dentro váis a la Configuración (Settings) de vuestro usuario (icono de la esquina superior derecha), desde ahí:
-*  Tokens de aceeso (panel de la izquierda)
-*  Indicad el nombre y marcad la casilla "api"
-*  Generar el token con el botón "Crear un token de acceso personal"
+Para crear el escenario de la práctica entramos en el directorio en el que se ubica el **docker-compose.yml** y dentro del mismo ejecutamos desde la terminal el comando:
 
-![access token](img/token.png "Access token")
+`docker-compose up -d`
 
-**IMPORTANTE**: Una vez se haya generado el token guardadlo en un lugar seguro porque no podréis volver a verlo desde la pantalla
+El comando anterior creará todos los container docker y los elementos necesarios para la práctica
 
-### Requisitos del sistema
+### Detener y arrancar el escenario
 
-Para poder realizar la práctica necesitamos ejecutar una distribución GNU/Linux. La recomendada es la última distribución stable de Debian, a día de hoy Debian 10 (buster). El sistema puede ser un host físico (recomendado) o una máquina virtual de Virtual Box.
+Después de una sesión de trabajo con el escenario debemos de detener el mismo para poder retomarlo más adelante. Para ello ejecutamos desde el mismo directorio del apartado anterior
 
-### Instalación de git
+`docker-compose stop`
 
-**Git** es un sistema de gestión de **repositorios distribuídos**. Un repositorio es un almacén de información o código que puede ser operado en proyectos de software por equipos de desarrollo. Concretamente git es el sistema más extendido y potente de cuantos existen en la actualidad, además es totalmente libre y es la base de la mayoría de los proyectos de software libre.
+Más adelante cuando retomemos el trabajo levantamos de nuevo el escenario ejecutando desde el mismo directorio:
 
-Existen además una serie de plataformas para albergar repositorios y así poder compartir el código y colaborar en la construcción del mismo. Dos de estas plataformas, quizás las más conocidas, son **github** y **gitlab**.
+`docker-compose start`
 
-En nuestro caso haremos uso de repositorios para publicar las prácticas, es decir, las prácticas se crearán dentro de un repositorio git y por tanto será necesario disponer de esta herramienta instalada en nuestro sistema. Para instalar git en una distribución GNU/Linux basada en Debian (debian, ubuntu...) ejecutamos:
+### Acceder al container
 
-`apt upate`
+Podemos acceder a un container de varios modos
 
-`apt install -y git`
+#### Acceder mediante docker-compose exec
 
-Por supuesto también existen versiones para Windows y MacOS.
+**docker-compose exec nombre_servicio bash**
 
-Para descargar (o clonar) un repositorio necesitaremos conocer su URL, supongamos que vamos a descargar el repositorio con URL:
+donde nombre_servicio **es el nombre del servicio dentro del archivo docker-compose** para la generación del container (pero no coincide exactamente con el nombre de éste), los cuales se encuentran definidos dentro de la sección services en el archivo encabezando cada sección de creación de container. Por ejemplo si tengo en el docker-compose:
 
-**https://github.com/octocat/Hello-World.git**
+`version: '3'`
 
-`git clone https://github.com/octocat/Hello-World.git`
+`services:`
 
-Una vez termine el comando dispondremos en un directorio que por defecto tendrá el mismo nombre que el repositorio, es decir Hello-World, los contenidos del mismo.
+ `#Service sa toma el Dockerfile de ./laboratorio`
+ 
+ `host1:`
+ 
+ etc.
+ 
+ entonces podría acceder a ese container con el comando:
+ 
+ `docker-compose exec host1 bash` 
+ 
+#### Acceder mediante docker exec -it
 
-### Instalación de docker engine
+También podría acceder directamente el container usando el nombre del container (no el del servicio docker-compose).
+ 
+ Para ver los docker container en ejecución del escenario ejecutamos:
 
-Como plataforma de ejecución para las prácticas usaremos docker, por tanto lo primero que necesitamos es docker engine funcionando en nuestro sistema. Podemos instalar docker engine en cualquier distribución de GNU/Linux, MacOS e incluso Windows (aunque en este caso sobre una máquina virtual). Para instalar docker engine en Debian seguimos los pasos siguientes:
+`docker ps`
 
-#### Instalación de dependencias
+Si el nombre del container es **redes_laboratorio_host1_1** accederemos a él con:
 
-`apt install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common`
+`docker exec -it redes_laboratorio_host1_1 bash`
 
-#### Añadir repositorio
+#### Acceder mediante ssh
 
-Primero añadimos la clave del repositorio:
+Otra opción sería usar la propia dirección IP del container y acceder por ssh, pues éste servicio está habilitado por defecto en el container. Si la dirección IP es por ejemplo **192.168.199.13**, ejecutaría:
 
-`curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -`
+`ssh root@192.168.199.13`
 
-A continuación añadimos el repositorio:
+### Eliminar el escenario
 
-`add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"`
+Al terminar la práctica y entregar los resultados podéis eliminar el escenario, aunque es recomendable dejarlo durante un tiempo por si necesitáis repasar. Para eliminar los container del escenario y todos los elementos ejecutamos desde el mismo directorio:
 
-#### Actualizamos e instalamos docker-engine
+`docker-compose down`
 
-`apt update`
+O si queremos eliminar también las imágenes docker
 
-`apt install -y docker-ce docker-ce-cli containerd.io`
+`docker-compose down --rmi all`
 
-La referencia para la instalación en la documentación oficial:
+Si en el escenario se ha creado algún volumen de datos asociado al container y queremos que éstos se borren, deberíamos también añadir la opción -v, por ejemplo para borrar containers, networks, imaǵenes y volúmenes usaríamos:
 
-[Instalación de docker engine en Debian](https://docs.docker.com/engine/install/debian/#install-using-the-repository)
+`docker-compose down --rmi all -v`
 
-**NOTAS**:
-*  En los pasos de la instalación anterior si el comando sudo os da problemas es porque en Debian por defecto no viene instalado. En ese caso eliminad la instrucción sudo de los comandos y ejecutad todo con el usuario root.
-*  Una vez finalizada la instalación para poder ejecutar docker engine con un usuario no root, por ejemplo vuestro usuario normal de escritorio, ejecutad el comando siguiente con ese usuario, es decir desde una sesión de terminal del usuario (no de root):
+## Realización de la práctica
 
-#### Añadir usuario no root al grupo
+Una vez creado el escenario de la práctica es el momento de tomar el enunciado y realizar las tareas que se indican en el mismo. El escenario anterior habrá creado uno o varios docker containers y todos los artefactos necesarios.
 
-`usermod -aG docker $USER `
+En el enunciado de la práctica se te indicará qué hacer en cada container. 
 
-* El comando anterior añade al usuario al grupo docker, con esto podremos ejecutar docker con nuestro usuario de trabajo normal, sin necesidad de autenticarnos con usuario root. A continuación para aplicar los cambios del grupo ejecutamos:
+## Referencias
 
-`newgrp docker`
+### git
 
-### Instalación de docker compose
+[introduccion a git](https://aulasoftwarelibre.github.io/taller-de-git/introduccion/)
 
-**docker compose** es una herramienta de **despliegue de containers docker**. Se basa en un fichero declarativo en formato YAML (YAML Aint Markup Language) en el que se indica el entorno de despliegue de los container, es decir, en nuestro caso el escenario de la práctica.
-Para instalar docker-compose en Debian ejecutamos los pasos:
+### docker
 
-`curl -L "https://github.com/docker/compose/releases/download/1.27.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose`
+[breve introduccion a docker](https://guiadev.com/introduccion-a-docker/)
 
-`chmod +x /usr/local/bin/docker-compose`
+### docker-compose
 
-La referencia de instalación en la documentación oficial:
-
-[Instalación de docker-compose en Debian](https://docs.docker.com/compose/install/#install-compose-on-linux-systems)
-
-### Instalación de Ansible
-
-**Ansible** es un herramienta de **automatización de infraestructura**. Se basa en lo que se denomina **infraestructure as code**, es decir definir nuestra infraestructura de sistemas de un modo declarativo muy cercano a la escritura de software. Ansible lo necesitaremos para ejecutar los tests en los containers sobre los que vais a trabajar. La instalación de Ansible en Debian es muy fácil, básicamente se reduce a ejecutar:
-
-`apt update`
-
-`apt -y install ansible`
+[docker compose de un vistazo](https://docs.docker.com/compose/)
